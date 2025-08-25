@@ -1,98 +1,98 @@
-const express = require('express');
-const fs = require('fs');
-const cors = require('cors');
-const app = express();
+let timerInterval = null;
+let sessionSeconds = 2*60*60;
+let currentUID = null;
+const backendURL = 'http://localhost:3000';
 
-app.use(cors());
-app.use(express.json());
+function formatTime(sec){
+    const h = Math.floor(sec/3600).toString().padStart(2,'0');
+    const m = Math.floor((sec%3600)/60).toString().padStart(2,'0');
+    const s = Math.floor(sec%60).toString().padStart(2,'0');
+    return `${h}:${m}:${s}`;
+}
 
-const DB_PATH = './db.json';
-let db = fs.existsSync(DB_PATH) ? JSON.parse(fs.readFileSync(DB_PATH,'utf8')) : { users: [] };
-
-// Activate UID and start 2-hour session
-app.post('/activate', (req, res) => {
-    const { uid } = req.body;
-    if (!uid) return res.status(400).json({ error: 'UID required' });
-
-    const uidStr = String(uid);
-    let user = db.users.find(u => u.uid === uidStr);
-    if (!user) {
-        user = { uid: uidStr, activeUntil: null, vip: false };
-        db.users.push(user);
+async function activateDashboard(){
+    const uid = document.getElementById('uidInput').value.trim();
+    const errorDiv = document.getElementById('errorMsg');
+    if(!uid){
+        errorDiv.innerHTML = '<span style="color:red">Enter your UID to activate!</span>';
+        return;
     }
+    errorDiv.innerHTML = '';
+    currentUID = uid;
 
-    const now = Date.now();
-    user.activeUntil = now + 2 * 60 * 60 * 1000; // 2 hours
-    fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
-
-    res.json({
-        message: 'Dashboard activated',
-        activeUntil: user.activeUntil,
-        proxyIP: '192.168.1.100',
-        proxyPort: 8080
+    const res = await fetch(`${backendURL}/activate`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ uid })
     });
-});
+    const data = await res.json();
 
-// Get dashboard info
-app.get('/dashboard/:uid', (req, res) => {
-    const uidStr = String(req.params.uid);
-    const user = db.users.find(u => u.uid === uidStr);
-    if (!user) return res.status(404).json({ error: 'UID not found' });
+    const ipPortDiv = document.getElementById('ipPortBox');
+    ipPortDiv.style.display = 'inline-block';
+    ipPortDiv.innerHTML = `<span style="color:#0f0">Proxy IP: ${data.proxyIP} | Port: ${data.proxyPort}</span>`;
 
-    const now = Date.now();
-    const active = user.activeUntil && user.activeUntil > now;
+    if(timerInterval) clearInterval(timerInterval);
+    sessionSeconds = 2*60*60;
+    updateDashboard();
 
-    res.json({
-        uid: user.uid,
-        vip: user.vip,
-        active,
-        items: {
-            diamonds: 9999,
-            bundles: ['Dragon Set','Cyber Ninja'],
-            emotes: ['Dance 1','Victory Pose'],
-            skins: ['AK-47 Fire','UMP Shadow']
-        },
-        proxyIP: '192.168.1.100',
-        proxyPort: 8080
+    timerInterval = setInterval(() => {
+        sessionSeconds--;
+        updateDashboard();
+        if(sessionSeconds <= 0) sessionSeconds = 2*60*60;
+    }, 1000);
+}
+
+async function updateDashboard(){
+    if(!currentUID) return;
+    const res = await fetch(`${backendURL}/dashboard/${currentUID}`);
+    const data = await res.json();
+    const dashboardDiv = document.getElementById('dashboard');
+
+    // Render proper HTML
+    dashboardDiv.innerHTML = `
+        <h2>UID: ${currentUID}</h2>
+        <p>Session Active: ${formatTime(sessionSeconds)}</p>
+        <h3>Items (Fake)</h3>
+        <p>Diamonds: ${data.items.diamonds}</p>
+        <p>Bundles: ${data.items.bundles.join(', ')}</p>
+        <p>Emotes: ${data.items.emotes.join(', ')}</p>
+        <p>Skins: ${data.items.skins.join(', ')}</p>
+    `;
+
+    renderSocialIsland(data.items);
+    updateProgressBar();
+}
+
+function renderSocialIsland(items){
+    const islandDiv = document.getElementById('socialIsland');
+    islandDiv.innerHTML = '';
+    const allItems = [...items.bundles, ...items.emotes, ...items.skins];
+
+    allItems.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'itemCard';
+        card.innerHTML = `
+            <img class="itemImg" src="https://via.placeholder.com/100?text=${encodeURIComponent(item)}" alt="${item}">
+            <p>${item}</p>
+        `;
+        islandDiv.appendChild(card);
     });
+}
+
+function updateProgressBar(){
+    const percent = ((2*60*60 - sessionSeconds) / (2*60*60)) * 100;
+    document.getElementById('progressBar').style.width = percent + '%';
+}
+
+// IP/Port click simulation
+document.getElementById('ipPortBox').addEventListener('click', async () => {
+    if(!currentUID){
+        const res = await fetch(`${backendURL}/use-proxy`);
+        const data = await res.json();
+        document.getElementById('errorMsg').innerHTML = `<span style="color:red">${data.error}</span>`;
+    } else {
+        const res = await fetch(`${backendURL}/use-proxy/${currentUID}`);
+        const data = await res.json();
+        document.getElementById('errorMsg').innerHTML = `<span style="color:lime">${data.message}</span>`;
+    }
 });
-
-// Simulate proxy usage without UID
-app.get('/use-proxy/:uid?', (req, res) => {
-    const uidStr = req.params.uid ? String(req.params.uid) : null;
-    if (!uidStr) return res.json({ error: 'UID [UNKNOWN] is locked' });
-
-    const user = db.users.find(u => u.uid === uidStr);
-    if (!user) return res.json({ error: `UID [${uidStr}] is locked` });
-
-    res.json({ message: `Proxy active for UID [${uidStr}]` });
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));        uid: user.uid,
-        vip: user.vip,
-        active,
-        items:{
-            diamonds:9999,
-            bundles:['Dragon Set','Cyber Ninja'],
-            emotes:['Dance 1','Victory Pose'],
-            skins:['AK-47 Fire','UMP Shadow']
-        },
-        proxyIP:'192.168.1.100',
-        proxyPort:8080
-    });
-});
-
-// Simulate IP/Port usage without UID
-app.get('/use-proxy/:uid?',(req,res)=>{
-    const uid = req.params.uid;
-    if(!uid) return res.json({error:'UID [UNKNOWN] is locked'});
-
-    const user = db.users.find(u=>u.uid===uid);
-    if(!user) return res.json({error:`UID [${uid}] is locked`});
-
-    res.json({message:`Proxy active for UID [${uid}]`});
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT,()=>console.log(`Backend running on port ${PORT}`));
