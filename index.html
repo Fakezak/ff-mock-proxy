@@ -5,24 +5,55 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FF Mock Proxy Dashboard</title>
 <style>
-body { margin:0; padding:0; font-family:'Segoe UI',sans-serif; background: linear-gradient(135deg,#0a0a0a,#1a001a); color:#fff; text-align:center;}
+body {
+    margin:0; padding:0; font-family:'Segoe UI',sans-serif;
+    background: linear-gradient(135deg,#0a0a0a,#1a001a); color:#fff; text-align:center;
+}
 h1,h2,h3 { text-shadow:0 0 10px #ff00ff,0 0 20px #ff00ff;}
-input { padding:10px; margin:10px; border-radius:5px; border:none; outline:none; width:200px; text-align:center; background:#222; color:#fff; box-shadow:0 0 10px #ff00ff;}
-button { padding:10px 20px; margin:10px; border:none; border-radius:5px; cursor:pointer; background:#ff00ff; color:#000; font-weight:bold; box-shadow:0 0 15px #ff00ff,0 0 25px #ff00ff inset; transition:0.3s; animation:glow 1.5s infinite alternate;}
+input {
+    padding:10px; margin:10px; border-radius:5px; border:none; outline:none;
+    width:200px; text-align:center; background:#222; color:#fff; box-shadow:0 0 10px #ff00ff;
+}
+button {
+    padding:10px 20px; margin:10px; border:none; border-radius:5px; cursor:pointer;
+    background:#ff00ff; color:#000; font-weight:bold;
+    box-shadow:0 0 15px #ff00ff,0 0 25px #ff00ff inset; transition:0.3s; animation:glow 1.5s infinite alternate;
+}
 button:hover { transform: scale(1.1);}
-@keyframes glow { 0%{box-shadow:0 0 10px #ff00ff,0 0 20px #ff00ff inset;} 100%{box-shadow:0 0 20px #ff00ff,0 0 40px #ff00ff inset;} }
-#dashboard { margin:20px auto; background:rgba(50,0,50,0.8); padding:20px; border-radius:10px; width:90%; max-width:600px; box-shadow:0 0 20px #ff00ff;}
-#socialIsland { display:flex; flex-wrap:wrap; justify-content:center; margin:20px auto; background:rgba(20,0,20,0.8); padding:15px; border-radius:10px; width:90%; max-width:900px; box-shadow:0 0 25px #ff00ff;}
-.itemCard { background:#222; color:#fff; width:140px; margin:10px; padding:10px; border-radius:10px; text-align:center; box-shadow:0 0 10px #ff00ff; transition:transform 0.2s, box-shadow 0.2s;}
+@keyframes glow {
+    0%{box-shadow:0 0 10px #ff00ff,0 0 20px #ff00ff inset;}
+    100%{box-shadow:0 0 20px #ff00ff,0 0 40px #ff00ff inset;}
+}
+#dashboard {
+    margin:20px auto; background:rgba(50,0,50,0.8); padding:20px;
+    border-radius:10px; width:90%; max-width:600px; box-shadow:0 0 20px #ff00ff;
+}
+#socialIsland {
+    display:flex; flex-wrap:wrap; justify-content:center;
+    margin:20px auto; background:rgba(20,0,20,0.8); padding:15px;
+    border-radius:10px; width:90%; max-width:900px; box-shadow:0 0 25px #ff00ff;
+}
+.itemCard {
+    background:#222; color:#fff; width:140px; margin:10px; padding:10px;
+    border-radius:10px; text-align:center; box-shadow:0 0 10px #ff00ff;
+    transition:transform 0.2s, box-shadow 0.2s;
+}
 .itemCard:hover { transform: scale(1.1); box-shadow:0 0 20px #ff00ff;}
 .itemImg { width:100px; height:100px; border-radius:5px; object-fit:cover; margin-bottom:5px;}
 #errorMsg { margin-top:15px; font-weight:bold; }
-#ipPortBox { margin-top:15px; padding:10px; background:#111; border-radius:5px; box-shadow:0 0 10px #ff00ff; display:inline-block; cursor:pointer;}
-#progressContainer { width:80%; height:20px; background:#222; border-radius:10px; margin:10px auto; box-shadow:0 0 10px #ff00ff; overflow:hidden;}
+#ipPortBox {
+    margin-top:15px; padding:10px; background:#111; border-radius:5px;
+    box-shadow:0 0 10px #ff00ff; display:none; cursor:pointer;
+}
+#progressContainer {
+    width:80%; height:20px; background:#222; border-radius:10px;
+    margin:10px auto; box-shadow:0 0 10px #ff00ff; overflow:hidden;
+}
 #progressBar { height:100%; width:0%; background:#ff00ff; border-radius:10px;}
 </style>
 </head>
 <body>
+
 <h1>FF Mock Proxy Dashboard</h1>
 <input id="uidInput" placeholder="Enter your UID">
 <button onclick="activateDashboard()">Activate</button>
@@ -31,14 +62,14 @@ button:hover { transform: scale(1.1);}
 
 <div id="dashboard"></div>
 <div id="socialIsland"></div>
-<div id="ipPortBox" style="display:none;"></div>
+<div id="ipPortBox"></div>
 <div id="errorMsg"></div>
 
 <script>
 let timerInterval = null;
 let sessionSeconds = 2*60*60;
 let currentUID = null;
-const backendURL = 'http://localhost:3000';
+const backendURL = 'http://localhost:3000'; // Replace with your backend URL
 
 function formatTime(sec){
     const h=Math.floor(sec/3600).toString().padStart(2,'0');
@@ -50,7 +81,7 @@ function formatTime(sec){
 async function activateDashboard(){
     const uid = document.getElementById('uidInput').value.trim();
     const errorDiv = document.getElementById('errorMsg');
-    if(!uid){ 
+    if(!uid){
         errorDiv.innerHTML='<span style="color:red">Enter your UID to activate!</span>';
         return;
     }
@@ -81,6 +112,59 @@ async function activateDashboard(){
 
 async function updateDashboard(){
     if(!currentUID) return;
+    const res = await fetch(`${backendURL}/dashboard/${currentUID}`);
+    const data = await res.json();
+    const dashboardDiv = document.getElementById('dashboard');
+
+    dashboardDiv.innerHTML = `
+        <h2>UID: ${currentUID}</h2>
+        <p>Session Active: ${formatTime(sessionSeconds)}</p>
+        <h3>Items (Fake)</h3>
+        <p>Diamonds: ${data.items.diamonds}</p>
+        <p>Bundles: ${data.items.bundles.join(', ')}</p>
+        <p>Emotes: ${data.items.emotes.join(', ')}</p>
+        <p>Skins: ${data.items.skins.join(', ')}</p>
+    `;
+    renderSocialIsland(data.items);
+    updateProgressBar();
+}
+
+function renderSocialIsland(items){
+    const islandDiv = document.getElementById('socialIsland');
+    islandDiv.innerHTML = '';
+    const allItems = [...items.bundles, ...items.emotes, ...items.skins];
+
+    allItems.forEach(item=>{
+        const card = document.createElement('div');
+        card.className='itemCard';
+        card.innerHTML = `
+            <img class="itemImg" src="https://via.placeholder.com/100?text=${encodeURIComponent(item)}" alt="${item}">
+            <p>${item}</p>
+        `;
+        islandDiv.appendChild(card);
+    });
+}
+
+function updateProgressBar(){
+    const percent = ((2*60*60 - sessionSeconds) / (2*60*60)) * 100;
+    document.getElementById('progressBar').style.width = percent + '%';
+}
+
+document.getElementById('ipPortBox').addEventListener('click', async ()=>{
+    if(!currentUID){
+        const res = await fetch(`${backendURL}/use-proxy`);
+        const data = await res.json();
+        document.getElementById('errorMsg').innerHTML=`<span style="color:red">${data.error}</span>`;
+    } else {
+        const res = await fetch(`${backendURL}/use-proxy/${currentUID}`);
+        const data = await res.json();
+        document.getElementById('errorMsg').innerHTML=`<span style="color:lime">${data.message}</span>`;
+    }
+});
+</script>
+
+</body>
+</html>    if(!currentUID) return;
     const res = await fetch(`${backendURL}/dashboard/${currentUID}`);
     const data = await res.json();
     const dashboardDiv = document.getElementById('dashboard');
