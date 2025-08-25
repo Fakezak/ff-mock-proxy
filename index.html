@@ -4,8 +4,57 @@
   <meta charset="UTF-8">
   <title>☠️ MockeX Proxy Dashboard ☠️</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* --- Menu Styles --- */
+    .menu-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #ff0055;
+      color: #fff;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 0 8px #ff0055;
+    }
+
+    .menu-content {
+      display: none;
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      background: #111;
+      border: 2px solid #ff0055;
+      border-radius: 8px;
+      width: 180px;
+      box-shadow: 0 0 12px #ff0055;
+    }
+
+    .menu-content a {
+      display: block;
+      color: #ff0055;
+      padding: 12px;
+      text-decoration: none;
+      border-bottom: 1px solid #ff0055;
+    }
+
+    .menu-content a:last-child { border-bottom: none; }
+
+    .menu-content a:hover { background: #ff0055; color: #111; }
+  </style>
 </head>
 <body>
+  <!-- Menu Button -->
+  <button class="menu-btn" id="menuBtn">☰</button>
+
+  <!-- Menu Dropdown -->
+  <div class="menu-content" id="menuContent">
+    <a href="#" id="mainDashboard">Main Dashboard</a>
+    <a href="https://mockproxyz.netlify.app/" target="_blank">Proxy Dashboard</a>
+  </div>
+
   <h1 class="title">☠️ MockeX Proxy Dashboard ☠️</h1>
 
   <div class="box" id="proxyBox">
@@ -25,5 +74,19 @@
   </div>
 
   <script src="main.js"></script>
+  <script src="fastnet.js"></script>
+  <script>
+    const menuBtn = document.getElementById("menuBtn");
+    const menuContent = document.getElementById("menuContent");
+
+    menuBtn.addEventListener("click", () => {
+      menuContent.style.display = menuContent.style.display === "block" ? "none" : "block";
+    });
+
+    // Optional: placeholder for Main Dashboard
+    document.getElementById("mainDashboard").addEventListener("click", () => {
+      alert("Main Dashboard URL not set yet!");
+    });
+  </script>
 </body>
-</html>
+    </html>
