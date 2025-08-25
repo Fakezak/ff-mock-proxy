@@ -1,40 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MockeX Proxy</title>
-<style>
-body { background:#111; color:#0f0; font-family:monospace; text-align:center; padding:20px; }
-button { padding:10px 20px; margin:10px; cursor:pointer; }
-input { padding:5px; width:200px; margin:5px; }
-#displayBox { border:1px solid #0f0; padding:10px; margin:10px auto; width:350px; min-height:50px; }
-</style>
+  <meta charset="UTF-8">
+  <title>MockeX Proxy Dashboard</title>
+  <style>
+    body { background:#111; color:#0f0; font-family:monospace; text-align:center; }
+    .box { margin:20px; padding:20px; border:1px solid #0f0; display:inline-block; }
+    button { background:#0f0; color:#111; padding:10px 20px; border:none; cursor:pointer; }
+  </style>
 </head>
 <body>
-<h1>MockeX Proxy Dashboard</h1>
+  <h1>☠️ MockeX Proxy Dashboard ☠️</h1>
+  <div class="box" id="proxyBox">Proxy: Not Active</div><br>
+  <button onclick="activateProxy()">Activate Proxy</button>
 
-<button id="activateBtn">Activate Proxy</button>
-<div id="displayBox">Proxy not active</div>
+  <div class="box" id="statusBox">Status: Waiting...</div>
 
-<h2>Connect to Proxy</h2>
-<input type="text" id="ipInput" placeholder="Enter Proxy IP">
-<input type="number" id="portInput" placeholder="Enter Proxy Port">
-<button id="connectBtn">Connect</button>
+  <script>
+    async function activateProxy() {
+      let res = await fetch("https://your-backend-url/get-proxy");
+      let data = await res.json();
+      document.getElementById("proxyBox").innerText =
+        `Proxy IP: ${data.proxyIP} | Port: ${data.proxyPort}`;
+      checkStatus();
+    }
 
-<h2>Status</h2>
-<div id="statusBox"></div>
-
-<script>
-const backendURL = "http://127.0.0.1:5000"; // replace with deployed backend URL
-
-document.getElementById('activateBtn').addEventListener('click', async () => {
-    const res = await fetch(`${backendURL}/activate`, { method:'POST' });
-    const data = await res.json();
-    document.getElementById('displayBox').innerText = 
-        `Proxy IP: ${data.ip}\nProxy Port: ${data.port}`;
-});
-
+    async function checkStatus() {
+      setInterval(async () => {
+        let res = await fetch("https://your-backend-url/status");
+        let data = await res.json();
+        document.getElementById("statusBox").innerText =
+          `FF Player: ${data.ffPlayer}\nProxy: ${data.proxy ? data.proxy.ip+":"+data.proxy.port : "None"}`;
+      }, 2000);
+    }
+  </script>
+</body>
+</html>
 document.getElementById('connectBtn').addEventListener('click', async () => {
     const ip = document.getElementById('ipInput').value;
     const port = parseInt(document.getElementById('portInput').value);
