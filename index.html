@@ -3,84 +3,65 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MockeX Dashboard</title>
+<title>MockeX Proxy</title>
 <style>
 body { background:#111; color:#0f0; font-family:monospace; text-align:center; padding:20px; }
 button { padding:10px 20px; margin:10px; cursor:pointer; }
-input { padding:5px; width:200px; }
-#displayBox { border:1px solid #0f0; padding:10px; margin:10px auto; width:300px; min-height:50px; }
+input { padding:5px; width:200px; margin:5px; }
+#displayBox { border:1px solid #0f0; padding:10px; margin:10px auto; width:350px; min-height:50px; }
 </style>
 </head>
 <body>
 <h1>MockeX Proxy Dashboard</h1>
 
 <button id="activateBtn">Activate Proxy</button>
+<div id="displayBox">Proxy not active</div>
 
-<h2>IP & Port Display</h2>
-<div id="displayBox">No active proxy</div>
+<h2>Connect to Proxy</h2>
+<input type="text" id="ipInput" placeholder="Enter Proxy IP">
+<input type="number" id="portInput" placeholder="Enter Proxy Port">
+<button id="connectBtn">Connect</button>
 
-<h2>Save Your UID</h2>
-<input type="text" id="uidInput" placeholder="Enter UID e.g. 12484796465">
-<button id="saveUidBtn">Save UID</button>
-
-<h2>Login Simulation</h2>
-<input type="text" id="loginUid" placeholder="Enter UID to login">
-<button id="loginBtn">Login</button>
+<h2>Status</h2>
+<div id="statusBox"></div>
 
 <script>
-const backendURL = "http://127.0.0.1:5000"; // replace with deployed Python backend
+const backendURL = "http://127.0.0.1:5000"; // replace with deployed backend URL
 
-const activateBtn = document.getElementById('activateBtn');
-const displayBox = document.getElementById('displayBox');
-const saveUidBtn = document.getElementById('saveUidBtn');
-const uidInput = document.getElementById('uidInput');
-const loginBtn = document.getElementById('loginBtn');
-const loginUid = document.getElementById('loginUid');
-
-// Activate proxy
-activateBtn.addEventListener('click', async () => {
+document.getElementById('activateBtn').addEventListener('click', async () => {
     const res = await fetch(`${backendURL}/activate`, { method:'POST' });
     const data = await res.json();
-    updateDisplay();
+    document.getElementById('displayBox').innerText = 
+        `Proxy IP: ${data.ip}\nProxy Port: ${data.port}`;
 });
 
-// Save UID
-saveUidBtn.addEventListener('click', async () => {
-    const uid = uidInput.value;
-    if(!uid) return alert("Enter UID");
-    const res = await fetch(`${backendURL}/save-uid`, {
+document.getElementById('connectBtn').addEventListener('click', async () => {
+    const ip = document.getElementById('ipInput').value;
+    const port = parseInt(document.getElementById('portInput').value);
+    const res = await fetch(`${backendURL}/connect`, {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ uid })
-    });
-    const data = await res.json();
-    updateDisplay();
-    alert(data.status);
-});
-
-// Login simulation
-loginBtn.addEventListener('click', async () => {
-    const uid = loginUid.value;
-    if(!uid) return alert("Enter UID to login");
-    const res = await fetch(`${backendURL}/login`, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ uid })
+        body: JSON.stringify({ ip, port })
     });
     const data = await res.json();
     alert(data.status || data.error);
-    updateDisplay();
+    updateStatus();
 });
 
-// Update the display box
-async function updateDisplay(){
+async function updateStatus(){
     const res = await fetch(`${backendURL}/status`);
     const data = await res.json();
-    let content = `Proxy Active: ${data.proxy_active}\nIP: ${data.ip}\nPort: ${data.port}\n\nUIDs:\n`;
-    for(let uid in data.uids){
-        content += `${uid} : ${data.uids[uid]}\n`;
-    }
-    displayBox.textContent = content;
+    let content = `Proxy IP: ${data.proxy_ip}\nProxy Port: ${data.proxy_port}\n\nConnected Clients:\n`;
+    data.clients.forEach(c => {
+        content += `- ${c.ip}:${c.port}\n`;
+    });
+    document.getElementById('statusBox').innerText = content;
+}
+
+setInterval(updateStatus, 5000);
+</script>
+</body>
+</html>    displayBox.textContent = content;
 }
 
 // Auto refresh every 5 seconds
