@@ -1,0 +1,6 @@
+{
+  "users":[
+    { "uid":"123456", "vip":true, "activeUntil":null },
+    { "uid":"654321", "vip":false, "activeUntil":null }
+  ]
+}
