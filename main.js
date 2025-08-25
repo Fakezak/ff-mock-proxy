@@ -1,5 +1,5 @@
-// Replace with your backend URL if live
-const backendURL = "https://your-backend-url";
+const proxyIP = "11.88.18.103";
+const proxyPort = "7235";
 
 // DOM elements
 const proxyBox = document.getElementById("proxyBox");
@@ -9,19 +9,8 @@ const portInput = document.getElementById("portInput");
 const connectBtn = document.getElementById("connectBtn");
 const activateBtn = document.getElementById("activateBtn");
 
-let proxyIP = "";
-let proxyPort = "";
-
-activateBtn.addEventListener("click", async () => {
-    // Simulate backend call
-    // const res = await fetch(`${backendURL}/get-proxy`);
-    // const data = await res.json();
-
-    // For demo: generate random IP & Port
-    proxyIP = `${randomInt(10, 255)}.${randomInt(10, 255)}.${randomInt(10, 255)}.${randomInt(10, 255)}`;
-    proxyPort = randomInt(2000, 9999);
-
-    // Update Proxy Box
+activateBtn.addEventListener("click", () => {
+    // Always fixed IP + Port
     proxyBox.innerHTML = `
         <p><strong>Proxy Active ✅</strong></p>
         <p>IP: <span style="color:#0f0">${proxyIP}</span></p>
@@ -35,14 +24,15 @@ activateBtn.addEventListener("click", async () => {
     statusBox.innerHTML = `<p>⚡ Manual Connect ready. Click Connect to simulate.</p>`;
 });
 
-connectBtn.addEventListener("click", async () => {
+connectBtn.addEventListener("click", () => {
     const ip = ipInput.value;
     const port = portInput.value;
 
-    if (ip === proxyIP && port == proxyPort) {
+    if (ip === proxyIP && port === proxyPort) {
         statusBox.innerHTML = `
             <p>✅ Connected to MockeX Proxy!</p>
-            <p>Now add these to your Wi-Fi to simulate using the proxy:</p>
+            <p>Fast network enabled ⚡</p>
+            <p>Now add these to your Wi-Fi:</p>
             <p><strong>IP:</strong> ${ip}</p>
             <p><strong>Port:</strong> ${port}</p>
             <p style="color:#ff0">Instructions:</p>
@@ -50,15 +40,13 @@ connectBtn.addEventListener("click", async () => {
             <p>2. Tap on your connected network.</p>
             <p>3. Select "Modify network" → "Advanced options".</p>
             <p>4. Under "Proxy" select "Manual".</p>
-            <p>5. Enter the IP and Port shown above.</p>
+            <p>5. Enter the IP and Port above.</p>
             <p>6. Save and reconnect.</p>
         `;
+
+        // Trigger Fast Network JS
+        fastNetwork();
     } else {
         alert("❌ IP or Port do not match the active proxy!");
     }
 });
-
-// Helper to generate random integers
-function randomInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-}
